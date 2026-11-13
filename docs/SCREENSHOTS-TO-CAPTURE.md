@@ -1,0 +1,4 @@
+# Screenshots to capture for your presentation (with real data)
+
+The files in `docs/screenshots/` were captured with simulated data. Re-capture these from your running app with real accounts:
+1. Onboarding + sign-in (Bengali). 2. Dashboard on phone and desktop. 3. AI call ringing and in-call with a Bengali reply. 4. Map with several reports + legend. 5. Route comparison with the explanation text. 6. SOS countdown screen. 7. SOS result with a real "Accepted by provider" line and the Telegram message on a second phone. 8. Walk Together: request and accept, plus the teen account seeing no adult journeys. 9. No-Touch capability panel. 10. Settings (contacts, privacy, permissions). 11. Coming Next. 12. Supabase table view showing `sos_events` and `notification_attempts` rows (proof of persistence; hide personal data).

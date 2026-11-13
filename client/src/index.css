@@ -1,0 +1,37 @@
+@import '@fontsource/noto-sans-bengali/400.css';
+@import '@fontsource/noto-sans-bengali/600.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/playfair-display/600.css';
+@import 'leaflet/dist/leaflet.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { font-family: Inter, 'Noto Sans Bengali', 'Hind Siliguri', system-ui, sans-serif; }
+  body { @apply bg-ivory text-charcoal antialiased; line-height: 1.6; background-image: radial-gradient(1200px 500px at 85% -10%, rgba(201,164,92,.18), transparent 60%), radial-gradient(900px 500px at -10% 110%, rgba(113,27,39,.08), transparent 60%); background-attachment: fixed; }
+  html[lang='bn'] body, html[lang='hi'] body { line-height: 1.75; }  /* Bengali/Devanagari need extra line height for matras */
+  :focus-visible { outline: 3px solid #C9A45C; outline-offset: 2px; }
+  html.large-text { font-size: 18px; }
+  html.high-contrast { --tw-text-opacity: 1; }
+  html.high-contrast .text-charcoal\/70, html.high-contrast .text-charcoal\/60 { color: #292323; }
+  html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after { animation: none !important; transition: none !important; }
+}
+
+@layer components {
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 min-h-[48px] font-semibold transition duration-150 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none; }
+  .btn-primary { @apply btn text-ivory shadow-md hover:shadow-lg hover:brightness-110; background-image: linear-gradient(135deg, #8A2434 0%, #711B27 55%, #5A131E 100%); }
+  .btn-secondary { @apply btn bg-white/80 text-crimson border border-gold/70 shadow-sm hover:bg-champagne hover:border-gold; }
+  .btn-danger { @apply btn text-white shadow-md hover:shadow-lg hover:brightness-110; background-image: linear-gradient(135deg, #C94A41 0%, #B83A32 100%); }
+  .btn-ghost { @apply btn text-crimson hover:bg-champagne; }
+  .card { @apply relative rounded-2xl border border-gold/30 bg-white/90 p-4 shadow-card backdrop-blur-sm sm:p-5; animation: fadeUp .35s ease-out both; }
+  .card-link { @apply transition duration-200 hover:-translate-y-0.5 hover:shadow-lift hover:border-gold/70; }
+  .input { @apply w-full min-h-[48px] rounded-xl border border-gold/50 bg-white px-4 py-2 text-charcoal shadow-inner shadow-charcoal/5 placeholder:text-charcoal/40 transition focus:border-crimson focus:outline-none focus:ring-2 focus:ring-gold/60; }
+  .label { @apply mb-1 block text-sm font-semibold tracking-wide text-crimson; }
+  .hero { @apply relative overflow-hidden rounded-3xl p-5 text-ivory shadow-lift sm:p-7; background: radial-gradient(circle at 12px 12px, rgba(201,164,92,.22) 1.5px, transparent 2px) 0 0/24px 24px, linear-gradient(135deg, #8A2434 0%, #711B27 50%, #4E1019 100%); }
+  .hero::after { content: ''; position: absolute; right: -60px; top: -60px; height: 200px; width: 200px; border-radius: 9999px; background: radial-gradient(circle, rgba(201,164,92,.35), transparent 70%); pointer-events: none; }
+  .chip { @apply inline-flex items-center gap-1.5 rounded-full border border-gold/60 bg-gold/20 px-3 py-1 text-xs font-bold uppercase tracking-wider; }
+  .icon-chip { @apply grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-ivory shadow-md; background-image: linear-gradient(135deg, #8A2434, #5A131E); }
+  .alpana { background-image: radial-gradient(circle at 12px 12px, rgba(201,164,92,.18) 1.5px, transparent 2px), radial-gradient(circle at 0 0, rgba(201,164,92,.10) 1px, transparent 1.5px); background-size: 24px 24px; }
+}

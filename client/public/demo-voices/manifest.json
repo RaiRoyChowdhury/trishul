@@ -1,0 +1,81 @@
+{
+  "_note": "Replace the text lines with your approved script and put the matching .wav files in this folder. Only use voices whose owners gave permission.",
+  "voices": [
+    {
+      "id": "father",
+      "name": "বাবা",
+      "relationship": "Father",
+      "language": "bn",
+      "clips": [
+        {
+          "text": "হ্যালো মা, তুই কোথায়? আমি তো তোর অটোর কাছেই আছি।",
+          "file": "father-01.wav"
+        },
+        {
+          "text": "ঠিক আছে, ফোন রাখিস না। আমি আসছি, দুই মিনিট।",
+          "file": "father-02.wav"
+        },
+        {
+          "text": "অটোওয়ালাকে বল, আমি গাড়ির নম্বরটা নিয়ে রেখেছি।",
+          "file": "father-03.wav"
+        }
+      ]
+    },
+    {
+      "id": "mother",
+      "name": "মা",
+      "relationship": "Mother",
+      "language": "bn",
+      "clips": [
+        {
+          "text": "হ্যালো সোনা, কোথায় আছিস এখন? বাড়ির দিকে আসছিস তো?",
+          "file": "mother-01.wav"
+        },
+        {
+          "text": "আমি লাইনেই আছি, তুই ফোন রাখিস না।",
+          "file": "mother-02.wav"
+        }
+      ]
+    },
+    {
+      "id": "dad-hi",
+      "name": "पापा",
+      "relationship": "Father",
+      "language": "hi",
+      "clips": [
+        {
+          "text": "हेलो बेटा, तुम कहाँ हो? मैं तुम्हारे ऑटो के पास ही हूँ।",
+          "file": "dad-hi-01.wav"
+        },
+        {
+          "text": "ठीक है, फ़ोन मत रखना। मैं दो मिनट में पहुँच रहा हूँ।",
+          "file": "dad-hi-02.wav"
+        },
+        {
+          "text": "ड्राइवर को बोलो कि मैंने गाड़ी का नंबर नोट कर लिया है।",
+          "file": "dad-hi-03.wav"
+        }
+      ]
+    },
+    {
+      "id": "friend-en",
+      "name": "Riya",
+      "relationship": "Friend",
+      "language": "en",
+      "clips": [
+        {
+          "text": "Hey, where are you right now? I'm almost at your stop, stay on the line.",
+          "file": "friend-en-01.wav"
+        },
+        {
+          "text": "Okay, don't hang up. I can see the road now, two minutes.",
+          "file": "friend-en-02.wav"
+        },
+        {
+          "text": "Tell the driver I've noted the vehicle number.",
+          "file": "friend-en-03.wav"
+        }
+      ]
+    }
+  ]
+}

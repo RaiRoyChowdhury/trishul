@@ -1,0 +1,21 @@
+{
+  "name": "trishul",
+  "private": true,
+  "version": "0.1.0",
+  "description": "TRISHUL - AI-assisted women and teen safety ecosystem (Kolkata and Howrah)",
+  "scripts": {
+    "setup": "npm install && npm install --prefix client && npm install --prefix server",
+    "dev": "concurrently -n server,client -c yellow,cyan \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "build": "npm run build --prefix client && npm run typecheck --prefix server",
+    "test": "npm test --prefix client && npm test --prefix server",
+    "typecheck": "npm run typecheck --prefix client && npm run typecheck --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/cli": "^8.6.2",
+    "@capacitor/core": "^8.6.2"
+  }
+}
