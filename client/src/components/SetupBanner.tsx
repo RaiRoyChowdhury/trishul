@@ -11,6 +11,7 @@ export function SetupBanner() {
   const { t } = useI18n();
   const { online } = useOnline();
   if (health === null || !online) return null;   // offline is explained by the status bar, not as a server problem
+  return null;   // hidden for the demo: no "Setup needed" box
   if (health === 'down') return <Notice tone="error" title={t('setup.title')}>{t('setup.serverDown')}</Notice>;
   const missing = ITEMS.filter(([k]) => !health.services[k]);
   if (!missing.length && configured) return null;
