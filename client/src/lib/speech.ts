@@ -95,7 +95,10 @@ function createNativeRecognizer(N: NativeSR, o: { lang: Lang; keepAlive?: boolea
         void clean().then(() => { if (wanted && o.keepAlive) void run(); else { wanted = false; o.onEnd?.(); } });
       }));
       await N.start({ language: LOCALE[o.lang], maxResults: 3, partialResults: true, popup: false });
-    }     } catch (e: any) { wanted = false; await clean(); o.onError?.('native-' + String(e?.message ?? e).slice(0, 80)); }
+    } catch (e: any) {
+      wanted = false; await clean();
+      o.onError?.('native-' + String(e?.message ?? e).slice(0, 80));
+    }
   };
   return {
     start() { wanted = true; void run(); },
