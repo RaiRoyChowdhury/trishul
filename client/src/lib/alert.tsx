@@ -168,7 +168,7 @@ export function AlertProvider({ children }: { children: ReactNode }) {
       if (!speechRecognitionSupported()) { setMicError('unsupported'); if (kind === 'sos') return false; }
             else if (!usingNativeSpeech()) {   // the Android app asks for the microphone through its native speech plugin instead
         try { const st = await navigator.mediaDevices.getUserMedia({ audio: true }); st.getTracks().forEach(t => t.stop()); }   // only to trigger the permission prompt
-        catch { setMicError('not-allowed'); if (kind === 'sos') return false; }
+                catch (e) { setMicError('web-mic-' + ((e as Error)?.name ?? 'err')); if (kind === 'sos') return false; }
       }
     }
     setArmed(a => { const n = { ...a, [kind]: mode }; armedRef.current = n; return n; });
