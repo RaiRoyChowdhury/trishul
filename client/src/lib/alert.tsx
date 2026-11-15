@@ -155,7 +155,7 @@ export function AlertProvider({ children }: { children: ReactNode }) {
         if (a.sos && sosP && matchPhrase(text, sosP).matched) trigger('secret_code', a.sos);
         else if (a.nt && ntP && meRef.current?.settings.nt_voice_enabled && matchPhrase(text, ntP).matched) trigger('no_touch_voice', a.nt);
       },
-      onError: (code) => setMicError(code),
+         onError: (code) => setMicError(code + (usingNativeSpeech() ? ' [native]' : ' [web]')),
     });
     rec.current.start();
   }, [trigger]);
