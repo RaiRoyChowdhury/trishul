@@ -39,7 +39,29 @@ export function speakDevice(text: string, lang: Lang): Promise<void> {
 }
 
 export async function micPermission(): Promise<'granted' | 'denied' | 'prompt' | 'unsupported'> {
-  try { const s = await navigator.permissions.query({ name: 'microphone' as PermissionName }); return s.state; } catch { return navigator.mediaDevices ? 'prompt' : 'unsupported'; }
+  if (!navigator.mediaDevices?.getUserMedia) return 'unsupported';
+
+  try {
+    const status = await navigator.permissions.query({
+      name: 'microphone' as PermissionName
+    });
+    return status.state;
+  } catch {
+    return 'prompt';
+  }
+}
+
+export async function requestMicPermission(): Promise<boolean> {
+  if (!navigator.mediaDevices?.getUserMedia) return false;
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach(track => track.stop());
+    return true;
+  } catch (error) {
+    console.error('Microphone permission error:', error);
+    return false;
+  }
 }
 export async function geoPermission(): Promise<'granted' | 'denied' | 'prompt' | 'unsupported'> {
   if (!navigator.geolocation) return 'unsupported';
