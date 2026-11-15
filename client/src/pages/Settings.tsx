@@ -4,7 +4,7 @@ import { useAuth } from '../lib/auth';
 import { useI18n } from '../lib/i18n';
 import { api } from '../lib/api';
 import { useSaveSettings } from '../lib/settings';
-import { geoPermission, micPermission, motionSupported, needsMotionPermission, requestMotion, speechRecognitionSupported } from '../lib/speech';
+import { geoPermission, micPermission, motionSupported, needsMotionPermission, requestMotion, requestMicPermission, speechRecognitionSupported } from '../lib/speech';
 import { Badge, Field, Notice, PageTitle, Toggle } from '../components/ui';
 import { InstallPrompt } from '../components/InstallPrompt';
 import { hasSmsConsent, setSmsConsent, smsAvailable, sendSmsFallback } from '../lib/nativeSms';
@@ -145,7 +145,23 @@ export default function Settings() {
 
       <section className="card space-y-2"><h2 className="font-display text-lg text-crimson">{t('set.perms')}</h2>
         <ul className="space-y-2 text-sm">
-          <li className="flex items-center justify-between">{t('set.mic')} {permBadge(perm.mic)}</li>
+         <li className="flex items-center justify-between gap-2">
+  {t('set.mic')}
+  <span className="flex items-center gap-2">
+    {permBadge(perm.mic)}
+    {perm.mic !== 'granted' && perm.mic !== 'unsupported' && (
+      <button
+        className="btn-secondary !min-h-[36px] !px-3"
+        onClick={async () => {
+          const ok = await requestMicPermission();
+          setPerm(prev => ({ ...prev, mic: ok ? 'granted' : 'denied' }));
+        }}
+      >
+        Grant
+      </button>
+    )}
+  </span>
+</li>
           <li className="flex items-center justify-between">{t('set.geo')} {permBadge(perm.geo)}</li>
           <li className="flex items-center justify-between gap-2">{t('set.motionSensor')} <span className="flex items-center gap-2">{permBadge(perm.motion)}{perm.motion === 'prompt' && <button className="btn-secondary !min-h-[36px] !px-3" onClick={() => void requestMotion().then(ok => setPerm({ ...perm, motion: ok ? 'granted' : 'denied' }))}>{t('nt.grantMotion')}</button>}</span></li>
         </ul>
