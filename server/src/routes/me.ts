@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { ah, dbCheck, HttpError, limiter, parse, requireAuth, svc, type AuthedRequest } from '../lib.js';
 import { env } from '../config.js';
 import { ageMatchesGroup, imageType, PROFESSIONS } from '../walkCards.js';
+import { isClonedId } from '../clone.js';
 
 const r = Router();
 r.use(requireAuth);
@@ -100,8 +101,22 @@ r.put('/callers/:id', ah(async (req, res) => {
   const { db } = A(req);
   res.json(dbCheck(await db.from('caller_profiles').update(parse(caller, req.body)).eq('id', req.params.id).select().single()));
 }));
-r.delete('/callers/:id', ah(async (req, res) => { const { db } = A(req); dbCheck(await db.from('caller_profiles').delete().eq('id', req.params.id)); res.json({ ok: true }); }));
-
+r.delete('/callers/:id', ah(async (req, res) => {
+  const { db } = A(req);
+  // If this caller has a cloned voice, also delete it at Sarvam (best effort; the caller is removed either way).
+  const row = await db.from('caller_profiles').select('voice_id').eq('id', req.params.id).maybeSingle();
+  const vid = row.data?.voice_id as string | null | undefined;
+  let providerDeleted: boolean | null = null;
+  if (isClonedId(vid) && env.sarvamKey) {
+    const other = await db.from('caller_profiles').select('id').eq('voice_id', vid as string).neq('id', req.params.id).limit(1);
+    if (!other.data?.length) {
+      const rsp = await fetch(`https://api.sarvam.ai/voices/delete/${encodeURIComponent(vid as string)}`, { method: 'DELETE', headers: { 'api-subscription-key': env.sarvamKey }, signal: AbortSignal.timeout(15000) }).catch(() => null);
+      providerDeleted = !!rsp && (rsp.status === 204 || rsp.status === 404);
+    }
+  }
+  dbCheck(await db.from('caller_profiles').delete().eq('id', req.params.id));
+  res.json({ ok: true, providerDeleted });
+}));
 const contact = z.object({
   name: z.string().trim().min(1).max(60), relationship: z.string().trim().max(40).nullish().transform(v => v || null),
   phone: z.string().trim().regex(/^\+[1-9][0-9]{7,14}$/, 'Use international format, e.g. +919876543210').nullish().or(z.literal('')).transform(v => v || null),
