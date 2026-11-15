@@ -7,7 +7,7 @@ import { useSaveSettings } from '../lib/settings';
 import { geoPermission, micPermission, motionSupported, needsMotionPermission, requestMotion, speechRecognitionSupported } from '../lib/speech';
 import { Badge, Field, Notice, PageTitle, Toggle } from '../components/ui';
 import { InstallPrompt } from '../components/InstallPrompt';
-import { hasSmsConsent, setSmsConsent, smsAvailable } from '../lib/nativeSms';
+import { hasSmsConsent, setSmsConsent, smsAvailable, sendSmsFallback } from '../lib/nativeSms';
 import { wipeAll, queueCount } from '../lib/localStore';
 import { CallerManager } from '../components/CallerManager';
 import { SetupBanner } from '../components/SetupBanner';
@@ -48,10 +48,34 @@ export default function Settings() {
       setForm(null); await loadContacts(); flash('ok', t('common.saved'));
     } catch (e) { flash('error', err(e)); }
   };
-  const testContact = async (id: string) => {
-    try { const r = await api.post<{ status: string; error?: string }>(`/contacts/${id}/test`); setTested({ ...tested, [id]: r.status === 'sent' ? t('set.testOk') : t('set.testFail', { e: r.error ?? r.status }) }); }
-    catch (e) { setTested({ ...tested, [id]: t('set.testFail', { e: err(e) }) }); }
-  };
+ const testContact = async (c: Contact) => {
+  const testBody =
+    'TRISHUL TEST MESSAGE — No emergency. This is a test of the Android SMS fallback. No action is required.';
+
+  try {
+    const results = await sendSmsFallback([c], testBody);
+    const status = results[0]?.status;
+
+    const messages: Record<string, string> = {
+      handed_to_phone: 'SMS handed to your phone for sending. Delivery is not confirmed.',
+      failed: 'Android could not hand the SMS to the phone.',
+      no_permission: 'SMS permission is not granted.',
+      no_consent: 'Enable SMS consent in Settings first.',
+      no_number: 'This contact needs a valid phone number and confirmed consent.',
+      unavailable: 'Native SMS is unavailable. Open the installed Android app.',
+    };
+
+    setTested(prev => ({
+      ...prev,
+      [c.id]: messages[status ?? 'failed'],
+    }));
+  } catch (e) {
+    setTested(prev => ({
+      ...prev,
+      [c.id]: err(e),
+    }));
+  }
+};
 
   return (
     <div className="space-y-5">
@@ -87,7 +111,7 @@ export default function Settings() {
             <div className="flex flex-wrap items-center justify-between gap-2"><div><span className="font-semibold">{c.name}</span> <span className="text-charcoal/70">{c.relationship}</span><div className="text-xs text-charcoal/70">{c.phone} {c.telegram_chat_id && `· TG ${c.telegram_chat_id}`}</div></div>
               <div className="flex flex-wrap gap-1"><Badge tone={c.consent_confirmed ? 'ok' : 'red'}>{c.consent_confirmed ? '✓' : '✗'} {t('set.contactConsent')}</Badge></div></div>
             <div className="mt-2 flex flex-wrap gap-2">
-              <button className="btn-secondary !min-h-[40px]" onClick={() => void testContact(c.id)}><Send className="h-4 w-4" />{t('set.testMsg')}</button>
+              <button className="btn-secondary !min-h-[40px]" onClick={() => void testContact(c)}><Send className="h-4 w-4" />{t('set.testMsg')}</button>
               <button className="btn-ghost !min-h-[40px]" onClick={() => setForm({ ...blank, ...c, relationship: c.relationship ?? '', phone: c.phone ?? '', telegram_chat_id: c.telegram_chat_id ?? '' })}>{t('common.edit')}</button>
               <button className="btn-ghost !min-h-[40px] !text-vermilion" onClick={wrap(async () => { await api.del(`/contacts/${c.id}`); await loadContacts(); })}>{t('common.delete')}</button></div>
             {tested[c.id] && <p className="mt-1 text-xs" role="status">{tested[c.id]}</p>}
