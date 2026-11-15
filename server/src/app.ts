@@ -18,7 +18,9 @@ export function createApp() {
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
   app.use(helmet());
-  app.use(cors({ origin: env.clientOrigin }));
+ app.use(cors({
+  origin: [env.clientOrigin, 'https://localhost']
+}));
   app.use(express.json({ limit: '50kb' }));
   app.use(limiter(60_000, 300));                       // global safety net per IP
   app.get('/api/health', (_req, res) => res.json({ ok: true, services: serviceStatus() }));
