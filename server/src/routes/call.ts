@@ -121,9 +121,26 @@ r.post('/call/tts', limiter(60_000, 30), ah(async (req, res) => {
     if (!rsp) throw new HttpError(502, 'TTS_UNAVAILABLE', 'Could not reach the voice service.');
     if (!rsp.ok) { const d = await rsp.text().then(x => x.slice(0, 160)).catch(() => ''); throw new HttpError(502, 'TTS_FAILED', rsp.status === 401 || rsp.status === 403 ? 'The Sarvam API key was rejected, or this voice is not available on your account.' : `The voice service returned an error (${rsp.status}). ${d}`); }
     const j: any = await rsp.json().catch(() => null);
-    const buf = cloned ? (typeof j?.audio_b64 === 'string' ? Buffer.from(j.audio_b64, 'base64') : typeof j?.audio === 'string' ? Buffer.from(j.audio, 'base64') : null) : decodeSarvam(j);
-    if (!buf) throw new HttpError(502, 'TTS_FAILED', 'The voice service returned no audio.');
-    return { result: buf, actual: actualTts(b.text.length, cloned), units: { chars: b.text.length, cloned } };
+const buf = cloned
+  ? (typeof j?.audio_b64 === 'string'
+      ? Buffer.from(j.audio_b64, 'base64')
+      : typeof j?.audio === 'string'
+        ? Buffer.from(j.audio, 'base64')
+        : null)
+  : decodeSarvam(j);
+
+console.log('[TTS diagnostic]', {
+  cloned,
+  contentType: rsp.headers.get('content-type'),
+  responseKeys: j && typeof j === 'object' ? Object.keys(j) : [],
+  audioBytes: buf?.length ?? 0,
+  riff: buf?.toString('ascii', 0, 4) === 'RIFF',
+  wave: buf?.toString('ascii', 8, 12) === 'WAVE',
+});
+
+if (!buf || buf.length < 44) {
+  throw new HttpError(502, 'TTS_FAILED', 'The voice service returned invalid audio.');
+}    return { result: buf, actual: actualTts(b.text.length, cloned), units: { chars: b.text.length, cloned } };
   });
   res.setHeader('content-type', 'audio/wav'); res.send(audio);
 }));
