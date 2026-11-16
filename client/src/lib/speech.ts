@@ -1,15 +1,16 @@
+import { SpeechRecognition } from '@capgo/capacitor-speech-recognition';
 import type { Lang } from '../locales';
 export const LOCALE: Record<Lang, string> = { bn: 'bn-IN', hi: 'hi-IN', en: 'en-IN' };
 const SRctor = (): any => (typeof window === 'undefined' ? null : (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition || null);
 /** Android app shell (Capacitor): WebView has no SpeechRecognition, so the native plugin @capacitor-community/speech-recognition is used. */
-interface NativeSR { available(): Promise<{ available: boolean }>; requestPermissions(): Promise<unknown>; start(o: object): Promise<unknown>; stop(): Promise<unknown>; addListener(ev: string, fn: (d: any) => void): Promise<{ remove(): Promise<void> }> }
-let nativeCache: NativeSR | null | undefined;
+type NativeSR = typeof SpeechRecognition;
+
 const nativeSR = (): NativeSR | null => {
-  if (nativeCache !== undefined) return nativeCache;
   const C = (globalThis as any).Capacitor;
-  if (!C?.isNativePlatform?.()) { nativeCache = null; return null; }
-  try { nativeCache = ((C.Plugins?.SpeechRecognition ?? C.registerPlugin?.('SpeechRecognition')) as NativeSR | undefined) ?? null; } catch { nativeCache = null; }
-  return nativeCache;
+
+  if (!C?.isNativePlatform?.()) return null;
+
+  return SpeechRecognition;
 };
 export const usingNativeSpeech = () => !!nativeSR();
 export const speechRecognitionSupported = () => !!SRctor() || !!nativeSR();
