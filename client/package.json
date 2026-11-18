@@ -15,6 +15,7 @@
     "@capacitor/android": "^8.6.2",
     "@capacitor/cli": "^8.6.2",
     "@capacitor/core": "^8.6.2",
+    "@capgo/capacitor-speech-recognition": "^8.5.1",
     "@fontsource/inter": "^5.3.0",
     "@fontsource/noto-sans-bengali": "^5.3.0",
     "@fontsource/playfair-display": "^5.3.0",

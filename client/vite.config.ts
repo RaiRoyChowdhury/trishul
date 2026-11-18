@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 // envDir '..' means ONE .env file at the project root is shared by client and server.
 export default defineConfig({
   plugins: [react()],
-  envDir: '..',
+  envDir: '.',
   server: {
     port: 5173,
     // In development the browser talks to :5173 and Vite forwards /api to the Express server.

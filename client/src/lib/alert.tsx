@@ -14,7 +14,7 @@ import { useI18n } from './i18n';
 import { matchPhrase, phraseStore } from './phrase';
 import { ShakeDetector } from './shake';
 import { cooldownLeft, canTrigger, secondsLeft, type Source } from './alertRules';
-import { createRecognizer, requestMotion, speechRecognitionSupported, motionSupported, type Recognizer } from './speech';
+import { createRecognizer, requestMotion, speechRecognitionSupported, usingNativeSpeech, motionSupported, type Recognizer } from './speech';
 import type { SosEvent } from './types';
 import { AlertOverlay } from '../components/AlertOverlay';
 
@@ -155,7 +155,7 @@ export function AlertProvider({ children }: { children: ReactNode }) {
         if (a.sos && sosP && matchPhrase(text, sosP).matched) trigger('secret_code', a.sos);
         else if (a.nt && ntP && meRef.current?.settings.nt_voice_enabled && matchPhrase(text, ntP).matched) trigger('no_touch_voice', a.nt);
       },
-      onError: (code) => setMicError(code),
+         onError: (code) => setMicError(code + (usingNativeSpeech() ? ' [native]' : ' [web]')),
     });
     rec.current.start();
   }, [trigger]);
@@ -166,9 +166,9 @@ export function AlertProvider({ children }: { children: ReactNode }) {
     const s = meRef.current?.settings; if (!s) return false;
     if (kind === 'sos' || s.nt_voice_enabled) {
       if (!speechRecognitionSupported()) { setMicError('unsupported'); if (kind === 'sos') return false; }
-      else {
+            else if (!usingNativeSpeech()) {   // the Android app asks for the microphone through its native speech plugin instead
         try { const st = await navigator.mediaDevices.getUserMedia({ audio: true }); st.getTracks().forEach(t => t.stop()); }   // only to trigger the permission prompt
-        catch { setMicError('not-allowed'); if (kind === 'sos') return false; }
+                catch (e) { setMicError('web-mic-' + ((e as Error)?.name ?? 'err')); if (kind === 'sos') return false; }
       }
     }
     setArmed(a => { const n = { ...a, [kind]: mode }; armedRef.current = n; return n; });
