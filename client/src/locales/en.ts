@@ -342,5 +342,23 @@ export const en = {
   'sms.unavailable': 'only in the Android app',
   'sms.consentLabel': 'Offline SMS fallback: let TRISHUL hand an SMS to my phone for contacts who agreed, when there is no internet',
   'sms.consentNote': 'Needs mobile signal. We can only say "handed to the phone", never "delivered". Android app only.',
+  // My scripted voices
+  'mv.title': 'My Scripted Voices',
+  'mv.note': 'Create a voice using your own script and optional recordings. Everything is saved on this device.',
+  'mv.lines': '{n} lines',
+  'mv.del': 'Delete {name}',
+  'mv.add': 'Add a voice',
+  'mv.name': 'Voice name',
+  'mv.rel': 'Relationship (optional)',
+  'mv.lang': 'Language',
+  'mv.order': 'Add script lines in the order they should play.',
+  'mv.line': 'Script line {n}',
+  'mv.rec': 'Add recording (optional)',
+  'mv.more': 'Add another line',
+  'mv.consent': 'I have permission to use these recordings.',
+  'mv.fallback': 'If a recording is missing, your phone will read the script aloud.',
+  'mv.save': 'Save voice',
+  'mv.cancel': 'Cancel',
 } as const;
+
 export type Key = keyof typeof en;

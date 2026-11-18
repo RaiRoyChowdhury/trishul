@@ -9,6 +9,9 @@ import { useOnline } from '../lib/online';
 import { toWav } from '../lib/wav';
 import { createRecognizer, speakDevice, speechRecognitionSupported, type Recognizer } from '../lib/speech';
 import { clipAt, clipUrl, demoCaller, loadDemoVoices, type DemoVoice } from '../lib/demo';
+import { getLocalClip } from '../lib/localVoices';
+import { MyVoicesPanel } from '../components/MyVoices';
+import { loadMyVoices, toDemo } from '../lib/myVoices';
 import { CallerManager } from '../components/CallerManager';
 import { Notice, PageTitle } from '../components/ui';
 import type { Caller } from '../lib/types';
@@ -38,6 +41,8 @@ export default function FakeCall() {
   const [text, setText] = useState('');
   const [demoVoices, setDemoVoices] = useState<DemoVoice[]>([]); const [demo, setDemo] = useState<DemoVoice | null>(null); const demoN = useRef(0);
   useEffect(() => { void loadDemoVoices().then(setDemoVoices); }, []);
+const [mine, setMine] = useState(loadMyVoices); const refreshMine = () => setMine(loadMyVoices());
+const allVoices = [...mine.map(toDemo), ...demoVoices];
   // Live AI is allowed only inside the admin-activated 30-day window and while the shared Rs 20 budget lasts. Otherwise: scripted demo only.
   const [ai, setAi] = useState<{ mode: 'live' | 'demo'; reason: string; expires_at: string | null } | null>(null);
   useEffect(() => { api.get<NonNullable<typeof ai>>('/ai/status').then(setAi).catch(e => setAi({ mode: 'demo', reason: e instanceof ApiError && e.code === 'NETWORK' ? 'offline' : 'no_key', expires_at: null })); }, []);
@@ -45,7 +50,7 @@ export default function FakeCall() {
   const judgeDemo = useDemoMode().on;
   const aiDemo = ai?.mode !== 'live' || !online || judgeDemo;   // Judge Demo Mode never calls the AI   // offline always means prepared recordings only, never AI
   const aiShown = !online ? { mode: 'demo' as const, reason: 'offline', expires_at: null } : ai;
-  const preferred = demoVoices.find(v => v.language === lang) ?? demoVoices[0];
+  const preferred = allVoices.find(v => v.language === lang) ?? allVoices[0];
   const micRec = useRef<MediaRecorder | null>(null);
   const rec = useRef<Recognizer | null>(null); const audio = useRef<HTMLAudioElement | null>(null); const turnsRef = useRef<Turn[]>([]);
   turnsRef.current = turns;
@@ -67,17 +72,49 @@ export default function FakeCall() {
     } finally { setStatus('idle'); }
   }, [engine, err, t]);
 
-  const playDemo = useCallback(async (v: DemoVoice) => {
-    const clip = clipAt(v, demoN.current); demoN.current += 1; setError(null);
-    setTurns(h => [...h, { role: 'assistant', content: clip.text }]); setStatus('speaking');
-    try { const a = new Audio(clipUrl(clip.file)); audio.current = a; await a.play(); await new Promise(r => { a.onended = r; a.onerror = r; }); }
-    catch {
-      // Recording missing: read the prepared script with the phone's own voice, and say so. It is still not AI.
-      try { setError({ text: t('off.deviceVoice'), offerDevice: false }); await speakDevice(clip.text, v.language); } catch { setError({ text: t('call.demoMissing'), offerDevice: false }); }
-    }
-    finally { setStatus('idle'); }
-  }, [t]);
+ 
+const playDemo = useCallback(async (v: DemoVoice) => {
+  const clip = clipAt(v, demoN.current);
+  demoN.current += 1;
+  setError(null);
+  setTurns(h => [...h, { role: 'assistant', content: clip.text }]);
+  setStatus('speaking');
 
+  let objectUrl: string | null = null;
+
+  try {
+    let source = clipUrl(clip.file);
+
+    // Custom voices use recordings stored locally on this device.
+    if (v.id.startsWith('my')) {
+      const blob = await getLocalClip(clip.file);
+      if (!blob) throw new Error('Custom recording not found');
+
+      objectUrl = URL.createObjectURL(blob);
+      source = objectUrl;
+    }
+
+    // Built-in voices continue using their existing audio files.
+    const a = new Audio(source);
+    audio.current = a;
+    await a.play();
+
+    await new Promise<void>(resolve => {
+      a.onended = () => resolve();
+      a.onerror = () => resolve();
+    });
+  } catch {
+    try {
+      setError({ text: t('off.deviceVoice'), offerDevice: false });
+      await speakDevice(clip.text, v.language);
+    } catch {
+      setError({ text: t('call.demoMissing'), offerDevice: false });
+    }
+  } finally {
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
+    setStatus('idle');
+  }
+}, [t]);
   const ask = useCallback(async (c: Caller, history: Turn[]) => {
     setStatus('thinking'); setError(null);
     try {
@@ -190,10 +227,20 @@ export default function FakeCall() {
         <label className="label" htmlFor="sc">{t('call.scenario')}</label>
         <select id="sc" className="input" value={scenario} onChange={e => setScenario(e.target.value)}>{(['auto', 'taxi', 'walking', 'waiting'] as const).map(k => <option key={k} value={k}>{t(`call.sc.${k}` as Key)}</option>)}</select>
         <div className="flex flex-wrap gap-2">
-          <button className="btn-primary" disabled={aiDemo ? !demoVoices.length : !sel} onClick={() => (aiDemo && preferred ? beginDemo(preferred) : sel && begin(sel))}><PhoneCall className="h-5 w-5" />{t('call.start')}{aiDemo && preferred ? ` — ${preferred.name}` : sel ? ` — ${sel.name}` : ''}</button>
+          <button className="btn-primary" disabled={aiDemo ? !allVoices.length : !sel} onClick={() => (aiDemo && preferred ? beginDemo(preferred) : sel && begin(sel))}><PhoneCall className="h-5 w-5" />{t('call.start')}{aiDemo && preferred ? ` — ${preferred.name}` : sel ? ` — ${sel.name}` : ''}</button>
           <button className="btn-secondary" disabled={aiDemo || !callers.length} onClick={quick}><Zap className="h-5 w-5" />{t('call.quick')}</button></div>
-        {demoVoices.length > 0 && <div className="border-t border-gold/40 pt-3"><p className="label">{t('call.demo')}</p><p className="mb-2 text-xs text-charcoal/70">{t('call.demoNote')}</p>
-          <div className="flex flex-wrap gap-2">{demoVoices.map(v => <button key={v.id} className="btn-secondary" onClick={() => beginDemo(v)}><Disc3 className="h-5 w-5" />{v.name}</button>)}</div></div>}
+               <div className="border-t border-gold/40 pt-3">
+          <p className="label">{t('call.demo')}</p>
+          <p className="mb-2 text-xs text-charcoal/70">{t('call.demoNote')}</p>
+          <div className="flex flex-wrap gap-2">
+            {allVoices.map(v => (
+              <button key={v.id} className="btn-secondary" onClick={() => beginDemo(v)}>
+                <Disc3 className="h-5 w-5" />{v.name}
+              </button>
+            ))}
+          </div>
+          <MyVoicesPanel mine={mine} onChange={refreshMine} />
+        </div>
         <p className="text-xs text-charcoal/70">{engine === 'device' ? t('call.deviceVoiceNote') : t('set.cloud')}</p>
       </section>
     </div>

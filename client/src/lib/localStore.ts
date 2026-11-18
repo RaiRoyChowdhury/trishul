@@ -51,3 +51,6 @@ export async function queueCount(): Promise<number> { return (await db()).count(
 export async function wipeAll(): Promise<void> {
   const d = await db(); await Promise.all([d.clear('kv'), d.clear('queue'), d.clear('keys')]); memKey = null;
 }
+export async function deleteKv(k: string): Promise<void> {
+  await (await db()).delete('kv', k);
+}
